@@ -227,7 +227,7 @@ BUSINESS_NAMES = [
 ]
 
 # Set to 0 for no date filter, or a positive integer for "last N days"
-DAYS_BACK   = 60
+DAYS_BACK   = 720
 URL         = "https://portal.vtcourts.gov/Portal/Home/Dashboard/29"
 OUTPUT_FILE = Path(__file__).parent / "vtcourts_results.xlsx"
 
@@ -520,7 +520,7 @@ HDR_FONT  = Font(bold=True, color="FFFFFF")
 HDR_FILL  = PatternFill("solid", fgColor="1F3864")
 ROW_FILL  = PatternFill("solid", fgColor="E2EFDA")
 CTR       = Alignment(horizontal="center", vertical="center")
-SHEET_HEADERS = ["Case Number", "Style / Defendant", "Location", "Searched Name", "Date Added"]
+SHEET_HEADERS = ["Case Number", "Style / Defendant", "Location"]
 
 
 def load_existing_case_numbers(output_path: Path) -> set:
@@ -549,9 +549,8 @@ def _set_col_widths(ws):
         ws.column_dimensions[col[0].column_letter].width = min(w + 4, 60)
 
 
-def append_to_excel(new_rows: list, searched_name: str, output_path: Path,
+def append_to_excel(new_rows: list, output_path: Path,
                     seen_this_run: set) -> tuple:
-    today_str = datetime.today().strftime("%m/%d/%Y")
 
     if output_path.exists():
         wb = openpyxl.load_workbook(output_path)
@@ -591,11 +590,9 @@ def append_to_excel(new_rows: list, searched_name: str, output_path: Path,
             continue
 
         nr = ws.max_row + 1
-        ws.cell(row=nr, column=1, value=case_num).fill                         = ROW_FILL
-        ws.cell(row=nr, column=2, value=row.get("Style / Defendant","")).fill  = ROW_FILL
-        ws.cell(row=nr, column=3, value=row.get("Location","")).fill            = ROW_FILL
-        ws.cell(row=nr, column=4, value=searched_name).fill                    = ROW_FILL
-        ws.cell(row=nr, column=5, value=today_str).fill                        = ROW_FILL
+        ws.cell(row=nr, column=1, value=case_num).fill                        = ROW_FILL
+        ws.cell(row=nr, column=2, value=row.get("Style / Defendant","")).fill = ROW_FILL
+        ws.cell(row=nr, column=3, value=row.get("Location","")).fill          = ROW_FILL
 
         seen_this_run.add(case_num)
         existing_in_file.add(case_num)
@@ -636,7 +633,7 @@ def main():
             total_found += len(results)
             if results:
                 added, skipped = append_to_excel(
-                    results, name, OUTPUT_FILE, seen_case_numbers
+                    results, OUTPUT_FILE, seen_case_numbers
                 )
                 total_added   += added
                 total_skipped += skipped
